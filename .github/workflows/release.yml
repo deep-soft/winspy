@@ -41,16 +41,16 @@ jobs:
     - name: Get program version
       shell: bash
       run: |
-        set -x
-        _version_major_=$(grep "define VERSION_MAJOR" version.h | awk '{print $3}')
-        _version_minor_=$(grep "define VERSION_MINOR" version.h | awk '{print $3}')
-        _version_revis_=$(grep "define VERSION_REVISION" version.h | awk '{print $3}')
-        _version_build_=$(grep "define VERSION_BUILD" version.h | awk '{print $3}')
+        # set -x
+        _version_major_=$(grep "define VERSION_MAJOR"       build/version.h | awk '{print $3}')
+        _version_minor_=$(grep "define VERSION_MINOR"       build/version.h | awk '{print $3}')
+        _version_build_=$(grep "define VERSION_BUILD"       build/version.h | awk '{print $3}')
+        _version_builc_=$(grep "define VERSION_BUILD_COUNT" build/version.h | awk '{print $3}')
         echo "_version_major_=" $_version_major_
         echo "_version_minor_=" $_version_minor_
-        echo "_version_revis_=" $_version_revis_
         echo "_version_build_=" $_version_build_
-        _prog_version_="$_version_major_.$_version_minor_.$_version_revis_.$_version_build_"
+        echo "_version_builc_=" $_version_builc_
+        _prog_version_="$_version_major_.$_version_minor_.$_version_build_.$_version_builc_"
         echo "PROG_VERSION=$_prog_version_" >> $GITHUB_ENV
 
     - name: Add MSBuild to PATH
