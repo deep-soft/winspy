@@ -1,0 +1,127 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Release WinSpy
+
+on:
+  workflow_dispatch:
+#  push:
+#    branches: [ "master" ]
+#  pull_request:
+#    branches: [ "master" ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: .
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+  WINSPY_GITHUB_COMMIT: ${{ github.sha }}
+
+  TAG_NAME: WinSpy
+  PROG_VERSION: '1.0.0.0'
+
+jobs:
+  build:
+    #strategy:
+    #  matrix:
+    #    configuration: [Release]
+    #    platform: [x64, x86]
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Get program version
+      shell: bash
+      run: |
+        set -x
+        _version_major_=$(grep "define VERSION_MAJOR" version.h | awk '{print $3}')
+        _version_minor_=$(grep "define VERSION_MINOR" version.h | awk '{print $3}')
+        _version_revis_=$(grep "define VERSION_REVISION" version.h | awk '{print $3}')
+        _version_build_=$(grep "define VERSION_BUILD" version.h | awk '{print $3}')
+        echo "_version_major_=" $_version_major_
+        echo "_version_minor_=" $_version_minor_
+        echo "_version_revis_=" $_version_revis_
+        echo "_version_build_=" $_version_build_
+        _prog_version_="$_version_major_.$_version_minor_.$_version_revis_.$_version_build_"
+        echo "PROG_VERSION=$_prog_version_" >> $GITHUB_ENV
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Build Win32
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add additional options to the MSBuild command line here (like platform or verbosity level).
+      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+      run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform="Win32" ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Create Zip Archive Release
+      uses: deep-soft/zip-release@v2
+      env:
+        # Configuration: ${{ matrix.configuration }}
+        # Platform: ${{ matrix.platform }}
+        Configuration: Release
+        Platform: x86
+        Version: ${{ env. PROG_VERSION }}
+      with:
+        type: 'zip'
+        filename: '${{ env.TAG_NAME }}-${{ env.Configuration }}-${{ env.Platform }}-${{ env.Version }}.zip'
+        directory: 'bin\${{ env.Platform }}\${{ env.Configuration }}'
+        inclusions: '*.exe *.cer *.inf *.dll'
+        exclusions: '*.map *.pdb ./.git/* .git/*'
+        recursive_exclusions: '*.map *.pdb'
+        path: '${{ env.TAG_NAME }}.exe'
+
+    - name: Publish
+      continue-on-error: true
+      uses: deep-soft/action-gh-release@v1
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        # tag_name: ${{ env.TAG_NAME }}-${{ env.VERSION }}
+        files: |
+          ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+    - name: Build x64
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      # Add additional options to the MSBuild command line here (like platform or verbosity level).
+      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+      run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform="x64" ${{ env.SOLUTION_FILE_PATH }}
+
+    - name: Create Zip Archive Release
+      uses: deep-soft/zip-release@v2
+      env:
+        # Configuration: ${{ matrix.configuration }}
+        # Platform: ${{ matrix.platform }}
+        Configuration: Release
+        Platform: x64
+        Version: ${{ env. PROG_VERSION }}
+      with:
+        type: 'zip'
+        filename: '${{ env.TAG_NAME }}-${{ env.Configuration }}-${{ env.Platform }}-${{ env.Version }}.zip'
+        directory: 'bin\${{ env.Platform }}\${{ env.Configuration }}'
+        inclusions: '*.exe *.cer *.inf *.dll'
+        exclusions: '*.map *.pdb ./.git/* .git/*'
+        recursive_exclusions: '*.map *.pdb'
+        path: '${{ env.TAG_NAME }}.exe'
+
+    - name: Publish
+      continue-on-error: true
+      uses: deep-soft/action-gh-release@v1
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        # tag_name: ${{ env.TAG_NAME }}-${{ env.VERSION }}
+        files: |
+          ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+    - name: Package
+      uses: actions/upload-artifact@v3
+      with:
+        name: WinSpy
+        path: "bin\\*\\Release"
