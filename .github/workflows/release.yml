@@ -42,10 +42,10 @@ jobs:
       shell: bash
       run: |
         # set -x
-        _version_major_=$(grep "define VERSION_MAJOR"       build/version.h | awk '{print $3}')
-        _version_minor_=$(grep "define VERSION_MINOR"       build/version.h | awk '{print $3}')
-        _version_build_=$(grep "define VERSION_BUILD"       build/version.h | awk '{print $3}')
-        _version_builc_=$(grep "define VERSION_BUILD_COUNT" build/version.h | awk '{print $3}')
+        _version_major_=$(grep "define VERSION_MAJOR "       build/version.h | awk '{print $3}')
+        _version_minor_=$(grep "define VERSION_MINOR "       build/version.h | awk '{print $3}')
+        _version_build_=$(grep "define VERSION_BUILD "       build/version.h | awk '{print $3}')
+        _version_builc_=$(grep "define VERSION_BUILD_COUNT " build/version.h | awk '{print $3}')
         echo "_version_major_=" $_version_major_
         echo "_version_minor_=" $_version_minor_
         echo "_version_build_=" $_version_build_
