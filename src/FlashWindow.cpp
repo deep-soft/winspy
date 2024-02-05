@@ -65,14 +65,15 @@ HWND CreateFlashWindow(HWND hwndToCover)
 
     if (!fInitializedWindowClass)
     {
-        WNDCLASSEX wc = { 0 };
+        WNDCLASSEX wc = { sizeof(wc) };
 
-        wc.cbSize        = sizeof(wc);
         wc.style         = 0;
         wc.lpszClassName = WC_FLASHWINDOW;
         wc.lpfnWndProc   = FlashWndProc;
 
         RegisterClassEx(&wc);
+
+        fInitializedWindowClass = TRUE;
     }
 
     GetWindowRect(hwndToCover, &rc);
